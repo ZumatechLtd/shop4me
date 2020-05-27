@@ -175,6 +175,9 @@ INTERNAL_IPS = [
 SITE_ID = 1
 
 
+SITE_URL = os.environ.get('SITE_URL')
+
+
 class TestModeDeterminer:
     def __bool__(self):
         return self()

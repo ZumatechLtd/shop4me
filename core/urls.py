@@ -10,4 +10,7 @@ urlpatterns = [
     path('requested-item/<int:pk>/', views.RequestedItemsDetailView.as_view(), name='requested-item-detail'),
     path('requested-item/<int:pk>/delete/', views.RequestedItemsDeleteView.as_view(), name='requested-item-delete'),
     path('requested-item/<int:pk>/update/', views.RequestedItemsUpdateView.as_view(), name='requested-item-update'),
+
+    path('add-shopper/<int:pk>/<str:invite_token>/', views.AddShopperView.as_view(), name='add-shopper'),
+
 ]

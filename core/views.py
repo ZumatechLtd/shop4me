@@ -1,9 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 
-from core.models import RequestedItem
+from core.models import RequestedItem, Shopper, Requester
 
 
 class RequestedItemsListView(LoginRequiredMixin, ListView):
@@ -52,3 +55,11 @@ class RequestedItemsUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.object.pk])
+
+
+class AddShopperView(LoginRequiredMixin, View):
+    def get(self, request, pk, invite_token, *args, **kwargs):
+        shopper = get_object_or_404(Shopper, user=self.request.user)
+        requester = get_object_or_404(Requester, pk=pk, invite_token=invite_token)
+        requester.add_shopper(shopper)
+        return redirect('account_login')

@@ -1,9 +1,16 @@
+import uuid
+from urllib.parse import urljoin
+
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.conf import settings
 
 
 # Create your models here.
+from django.urls import reverse
+
+
 class Account(models.Model):
     name = models.CharField(max_length=200)
 
@@ -21,7 +28,16 @@ class Shopper(Profile):
 
 
 class Requester(Profile):
-    shoppers = models.ForeignKey(Shopper, models.CASCADE, blank=True, null=True)
+    shoppers = models.ManyToManyField(Shopper, blank=True, null=True, related_name='requesters')
+    invite_token = models.CharField(default=uuid.uuid4, max_length=200)
+
+    def add_shopper(self, shopper):
+        self.shoppers.add(shopper)
+        self.save()
+
+    @property
+    def invite_link(self):
+        return urljoin(settings.SITE_URL, reverse('core:add-shopper', kwargs={'pk': self.pk, 'invite_token': self.invite_token}))
 
 
 class Item(models.Model):
