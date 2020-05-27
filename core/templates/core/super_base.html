@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+{% load bootstrap4 %}
+{% load static %}
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        {% bootstrap_css %}
+        {% bootstrap_javascript jquery="full" %}
+        {% block extra_head %}
+        {% endblock %}
+        {% block extra_css %}
+        {% endblock %}
+        <title>{% block title %} {% endblock %}</title>
+    </head>
+    <body>
+    {% block body %}
+        {% block header %}
+        <header>
+            {% block extra_header %}
+            {% endblock %}
+
+            {% block nav_bar %}
+            {% endblock %}
+        </header>
+
+        {% block base_content %}
+        {% endblock %}
+
+        {% block extra_body %}
+        {% endblock %}
+
+        {% block footer %}
+        {% endblock %}
+
+        {% endblock %}
+        {% endblock %}
+    </body>
+</html>

@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block title %} Delete Requested item {% endblock %}
+{% block content %}
+<div>
+    <div class="row">
+        <div class="col-4 offset-3">
+            <h1>Delete Requested item</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ object }}
+                <button type="submit" value="Yes" class="btn btn-primary">Delete Requested item</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

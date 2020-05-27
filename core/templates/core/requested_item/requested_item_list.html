@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block content %}
+<div style="justify-content: space-around">
+    <a href="{% url 'core:requested-item-create' %}">
+        <button class="btn btn-primary">
+            <span>Request an item</span>
+        </button>
+    </a>
+</div>
+
+{% if object_list %}
+    <div>
+        <ul>
+            {% for requested_item in object_list %}
+            <li>
+                <a href="{% url 'core:requested-item-detail' requested_item.pk %}"> {{ requested_item.item.name }} - {{ requested_item.priority }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p>No requested items are available.</p>
+{% endif %}
+{% endblock %}

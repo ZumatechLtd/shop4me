@@ -1,0 +1,8 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block title %}Requested item{% endblock %}
+{% block content %}
+<h1> {{ requested_item.item.name }} </h1>
+{% endblock %}
