@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 
 from core.models import Account, Requester, RequestedItem, Shopper
 from core.models import Item
+from core.utils import date_string_from_datetime_object, localized_datetime_from_epoch_timestamp
 
 
 def list_display_model_field(model, fieldname=None, order_field=None):
@@ -30,6 +31,20 @@ def list_display_model_field(model, fieldname=None, order_field=None):
     return _
 
 
+def epoch_timestamp_to_human_readable(field, alternative_name=None):
+    def epoch_timestamp_as_human_readable(obj):
+        value = getattr(obj, field)
+        if value:
+            return date_string_from_datetime_object(localized_datetime_from_epoch_timestamp(value), date_format='%Y-%m-%d %H:%M:%S %Z')
+        return '-'
+    if alternative_name:
+        epoch_timestamp_as_human_readable.short_description = alternative_name.title()
+    else:
+        epoch_timestamp_as_human_readable.short_description = field.title()
+    epoch_timestamp_as_human_readable.admin_order_field = field
+    return epoch_timestamp_as_human_readable
+
+
 class RequesterModelAdmin(admin.ModelAdmin):
     fields = ['user', 'account', 'shoppers']
     list_display = ['user', 'account', 'get_invite_link']
@@ -39,7 +54,9 @@ class RequesterModelAdmin(admin.ModelAdmin):
 
 
 class RequestedItemModelAdmin(admin.ModelAdmin):
-    list_display = ['id', list_display_model_field(Requester, 'requester'), list_display_model_field(Item, 'item'), 'quantity', 'priority', list_display_model_field(Shopper, 'shopper')]
+    list_display = ['id', list_display_model_field(Requester, 'requester'), list_display_model_field(Item, 'item'),
+                    'quantity', 'priority', list_display_model_field(Shopper, 'shopper'),
+                    epoch_timestamp_to_human_readable('claimed_epoch_timestamp')]
     list_filter = ['priority']
 
 

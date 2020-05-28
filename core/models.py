@@ -84,6 +84,7 @@ class RequestedItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     priority = models.IntegerField(choices=priority_levels, max_length=100)
+    claimed_epoch_timestamp = models.BigIntegerField(blank=True, null=True)
 
     @property
     def is_claimed(self):
