@@ -4,7 +4,11 @@ from core.tests import utils
 from core.models import RequestedItem, Requester
 
 
-class ModelTests(TestCase):
+class ModelTestCase(TestCase):
+    pass
+
+
+class RequestedItemModelTestCase(TestCase):
     def test_requested_items_default_ordering_priority_descending(self):
         medium = utils.create_requested_item(priority=RequestedItem.MEDIUM)
         high = utils.create_requested_item(priority=RequestedItem.HIGH)
