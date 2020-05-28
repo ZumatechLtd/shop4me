@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block title %}Requester{% endblock %}
+{% block content %}
+<h1> {{ requester.user.username }} </h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">
+                Item Name
+            </th>
+            <th scope="col">
+                Quantity
+            </th>
+            <th scope="col">
+                Priority
+            </th>
+            <th scope="col">
+                Claimed?
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for requested_item in requester.requested_items.all %}
+            <tr>
+                <td>
+                    {{ requested_item.item.name }}
+                </td>
+                <td>
+                    {{ requested_item.quantity }}
+                </td>
+                <td>
+                    {{ requested_item.priority_string }}
+                </td>
+                <td>
+                    {% if not requested_item.is_claimed %} <a href="{% url 'core:requested-item-claim' requested_item.pk %}">Claim</a>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

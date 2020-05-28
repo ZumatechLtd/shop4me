@@ -55,6 +55,9 @@ class Requester(Profile):
 class Item(models.Model):
     name = models.CharField(max_length=300)
 
+    def __str__(self):
+        return
+
 
 class RequestedItemQueryset(models.QuerySet):
     def for_user(self, user):
@@ -77,5 +80,13 @@ class RequestedItem(models.Model):
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     priority = models.IntegerField(choices=priority_levels, max_length=100)
 
+    @property
+    def is_claimed(self):
+        return self.shopper is not None
+    
+    @property
+    def priority_string(self):
+        return dict((key, value) for key, value in self.priority_levels)[self.priority]
+    
     class Meta:
         ordering = ['-priority']

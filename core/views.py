@@ -58,6 +58,17 @@ class RequestedItemsUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('core:requested-item-detail', args=[self.object.pk])
 
 
+class RequestedItemsClaimView(LoginRequiredMixin, SingleObjectMixin, View):
+    model = RequestedItem
+
+    def get(self, request, pk, *args, **kwargs):
+        shopper = get_object_or_404(Shopper, user=self.request.user)
+        requested_item = self.get_object()
+        requested_item.shopper = shopper
+        requested_item.save()
+        return redirect('core:requester-detail', pk=requested_item.requester.pk)
+
+
 class AddShopperView(LoginRequiredMixin, View):
     model = Requester
 
@@ -80,7 +91,7 @@ class RemoveShopperView(LoginRequiredMixin, View):
 
 class ShoppersListView(LoginRequiredMixin, ListView):
     model = Shopper
-    template_name = 'core/shoppers/shoppers_list.html'
+    template_name = 'core/shopper/shoppers_list.html'
 
     def get_queryset(self):
         return Requester.objects.get(user=self.request.user).shoppers.all()
@@ -93,8 +104,30 @@ class ShoppersListView(LoginRequiredMixin, ListView):
 
 class ShoppersDetailView(LoginRequiredMixin, DetailView):
     model = Shopper
-    template_name = 'core/shoppers/shopper_detail.html'
+    template_name = 'core/shopper/shopper_detail.html'
     context_object_name = 'shopper'
 
     def get_queryset(self):
         return Requester.objects.get(user=self.request.user).shoppers.all()
+
+
+class RequesterForShopperListView(LoginRequiredMixin, ListView):
+    model = Requester
+    template_name = 'core/requester/requesters_for_shopper_list.html'
+
+    def get_queryset(self):
+        return Shopper.objects.get(user=self.request.user).requesters.all()
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(RequesterForShopperListView, self).get_context_data(**kwargs)
+        context['shopper'] = Shopper.objects.get(user=self.request.user)
+        return context
+
+
+class RequesterForShopperDetailView(LoginRequiredMixin, DetailView):
+    model = Requester
+    template_name = 'core/requester/requester_for_shopper_detail.html'
+    context_object_name = 'requester'
+
+    def get_queryset(self):
+        return Shopper.objects.get(user=self.request.user).requesters.all()
