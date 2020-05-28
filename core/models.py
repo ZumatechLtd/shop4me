@@ -31,7 +31,9 @@ class Profile(models.Model):
 
 
 class Shopper(Profile):
-    pass
+
+    def __str__(self):
+        return 'Shopper - %s' % self.user.username
 
 
 class Requester(Profile):
@@ -51,12 +53,15 @@ class Requester(Profile):
     def invite_link(self):
         return urljoin(settings.SITE_URL, reverse('core:add-shopper', kwargs={'pk': self.pk, 'invite_token': self.invite_token}))
 
+    def __str__(self):
+        return 'Requester - %s' % self.user.username
+
 
 class Item(models.Model):
     name = models.CharField(max_length=300)
 
     def __str__(self):
-        return
+        return '%s' % self.name
 
 
 class RequestedItemQueryset(models.QuerySet):
