@@ -40,6 +40,7 @@ class Requester(Profile):
 
     def add_shopper(self, shopper):
         self.shoppers.add(shopper)
+        self.invite_token = uuid.uuid4()
         self.save()
 
     @property

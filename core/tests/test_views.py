@@ -57,3 +57,14 @@ class AddShopperViewTests(ViewTestCase):
         self.login_user(requester_two.user)
         response = self.get(requester_one.invite_link)
         self.assertResponseNotFound(response)
+
+    def test_invite_link_is_updated_once_invite_is_accepted(self):
+        requester = test_utils.create_requester()
+        original_invite_token = requester.invite_token
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        self.get(requester.invite_link)
+        self.assertIn(shopper, requester.shoppers.all())
+        requester.refresh_from_db()
+        self.assertNotEqual(original_invite_token, requester.invite_token)
+
