@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 
 from core.models import RequestedItem, Shopper, Requester
 
@@ -57,9 +58,13 @@ class RequestedItemsUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('core:requested-item-detail', args=[self.object.pk])
 
 
-class AddShopperView(LoginRequiredMixin, View):
-    def get(self, request, pk, invite_token, *args, **kwargs):
+class AddShopperView(LoginRequiredMixin, SingleObjectMixin, View):
+    model = Requester
+    slug_field = 'invite_token'
+    slug_url_kwarg = 'invite_token'
+
+    def get(self, request, *args, **kwargs):
         shopper = get_object_or_404(Shopper, user=self.request.user)
-        requester = get_object_or_404(Requester, pk=pk, invite_token=invite_token)
+        requester = self.get_object()
         requester.add_shopper(shopper)
         return redirect('account_login')
