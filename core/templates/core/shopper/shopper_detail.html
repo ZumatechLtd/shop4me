@@ -1,0 +1,8 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block title %}Shopper{% endblock %}
+{% block content %}
+<h1> {{ shopper.user.username }} </h1>
+{% endblock %}

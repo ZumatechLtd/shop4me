@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block content %}
+<div>
+    <p>Share this link with people so they can shop for you! </p>
+    <a href={{ requester.invite_link}} > {{ requester.invite_link }} </a>
+</div>
+{% if object_list %}
+<div>
+    <ul>
+        {% for shopper in object_list %}
+        <li>
+            <a href="{% url 'core:shopper-detail' shopper.pk %}"> {{ shopper.user.username }} - <a href="{% url 'core:remove-shopper' shopper.pk %}"> Remove shopper </a></a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<p>You don't have any shoppers.</p>
+{% endif %}
+{% endblock %}

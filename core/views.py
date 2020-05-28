@@ -75,4 +75,26 @@ class RemoveShopperView(LoginRequiredMixin, View):
         requester = get_object_or_404(Requester, user=self.request.user)
         shopper = get_object_or_404(Shopper, pk=shopper_pk)
         requester.remove_shopper(shopper)
-        return redirect('account_login')
+        return redirect('core:shoppers')
+
+
+class ShoppersListView(LoginRequiredMixin, ListView):
+    model = Shopper
+    template_name = 'core/shoppers/shoppers_list.html'
+
+    def get_queryset(self):
+        return Requester.objects.get(user=self.request.user).shoppers.all()
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(ShoppersListView, self).get_context_data(**kwargs)
+        context['requester'] = Requester.objects.get(user=self.request.user)
+        return context
+
+
+class ShoppersDetailView(LoginRequiredMixin, DetailView):
+    model = Shopper
+    template_name = 'core/shoppers/shopper_detail.html'
+    context_object_name = 'shopper'
+
+    def get_queryset(self):
+        return Requester.objects.get(user=self.request.user).shoppers.all()
