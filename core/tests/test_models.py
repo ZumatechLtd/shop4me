@@ -8,7 +8,7 @@ class ModelTestCase(TestCase):
     pass
 
 
-class RequestedItemModelTestCase(TestCase):
+class RequestedItemModelTestCase(ModelTestCase):
     def test_requested_items_default_ordering_priority_descending(self):
         medium = utils.create_requested_item(priority=RequestedItem.MEDIUM)
         high = utils.create_requested_item(priority=RequestedItem.HIGH)
