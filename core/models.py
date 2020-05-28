@@ -1,4 +1,5 @@
 import uuid
+from django.utils import timezone
 from urllib.parse import urljoin
 
 from django.contrib.auth.models import User
@@ -31,6 +32,11 @@ class Profile(models.Model):
 
 
 class Shopper(Profile):
+
+    def claim_requested_item(self, requested_item):
+        requested_item.shopper = self
+        requested_item.claimed_epoch_timestamp = timezone.now().timestamp()
+        requested_item.save()
 
     def __str__(self):
         return 'Shopper - %s' % self.user.username

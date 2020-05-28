@@ -64,8 +64,7 @@ class RequestedItemsClaimView(LoginRequiredMixin, SingleObjectMixin, View):
     def get(self, request, pk, *args, **kwargs):
         shopper = get_object_or_404(Shopper, user=self.request.user)
         requested_item = self.get_object()
-        requested_item.shopper = shopper
-        requested_item.save()
+        shopper.claim_requested_item(requested_item)
         return redirect('core:requester-detail', pk=requested_item.requester.pk)
 
 
