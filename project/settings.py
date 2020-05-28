@@ -172,6 +172,10 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
+
+ACCOUNT_FORMS = {'signup': 'core.forms.CustomSignupForm'}
+
+
 SITE_ID = 1
 
 

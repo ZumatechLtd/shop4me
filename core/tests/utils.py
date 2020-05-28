@@ -51,7 +51,9 @@ def create_item(**kwargs):
 def create_requester(**kwargs):
     d = kwargs.copy()
     set_if_not_present(d, 'user', create_user()),
-    return d['user'].requester
+    set_if_not_present(d, 'account', create_account()),
+    return get_or_create(Requester, d)
+
 
 
 def create_requested_item(**kwargs):

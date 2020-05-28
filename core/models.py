@@ -16,8 +16,18 @@ class Account(models.Model):
 
 
 class Profile(models.Model):
+    REQUESTER = 'requester'
+    SHOPPER = 'shopper'
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='%(class)s_profiles')
+
+    @classmethod
+    def get_profile_model(cls, account_type):
+        return {
+            cls.REQUESTER: Requester,
+            cls.SHOPPER: Shopper,
+        }[account_type]
 
     class Meta:
         abstract = True
