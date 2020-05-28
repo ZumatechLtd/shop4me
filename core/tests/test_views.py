@@ -88,3 +88,19 @@ class RemoveShopperViewTests(ViewTestCase):
         self.login_user(shopper.user)
         resp = self.remove_shopper(shopper, shopper)
         self.assertResponseNotFound(resp)
+
+
+class RequestedItemsClaimViewTest(ViewTestCase):
+    def setUp(self):
+        super(RequestedItemsClaimViewTest, self).setUp()
+        self.shopper = test_utils.create_shopper()
+
+    def claim_item(self, requested_item):
+        return self.get(reverse('core:requested-item-claim', args=[requested_item.pk]))
+
+    def test_shopper_can_claim_requested_item(self):
+        requested_item = test_utils.create_requested_item()
+        self.login_user(self.shopper.user)
+        self.claim_item(requested_item)
+        requested_item.refresh_from_db()
+        self.assertEqual(requested_item.shopper, self.shopper)
