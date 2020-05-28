@@ -48,12 +48,23 @@ def create_item(**kwargs):
     return get_or_create(Item, d)
 
 
-def create_requester(**kwargs):
+def setup_profile_fields(**kwargs):
     d = kwargs.copy()
     set_if_not_present(d, 'user', create_user()),
     set_if_not_present(d, 'account', create_account()),
+    return d
+
+
+def create_requester(**kwargs):
+    d = kwargs.copy()
+    d = setup_profile_fields(**d)
     return get_or_create(Requester, d)
 
+
+def create_shopper(**kwargs):
+    d = kwargs.copy()
+    d = setup_profile_fields(**d)
+    return get_or_create(Shopper, d)
 
 
 def create_requested_item(**kwargs):
