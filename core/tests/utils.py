@@ -55,11 +55,14 @@ def setup_profile_fields(**kwargs):
     return d
 
 
-def create_requester(**kwargs):
+def create_requester(shoppers=[], **kwargs):
     d = kwargs.copy()
     d = setup_profile_fields(**d)
-    return get_or_create(Requester, d)
-
+    requester = get_or_create(Requester, d)
+    if shoppers:
+        requester.add_shopper(*shoppers)
+    requester.save()
+    return requester
 
 def create_shopper(**kwargs):
     d = kwargs.copy()

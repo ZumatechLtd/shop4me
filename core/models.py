@@ -43,6 +43,10 @@ class Requester(Profile):
         self.invite_token = uuid.uuid4()
         self.save()
 
+    def remove_shopper(self, shopper):
+        self.shoppers.remove(shopper)
+        self.save()
+
     @property
     def invite_link(self):
         return urljoin(settings.SITE_URL, reverse('core:add-shopper', kwargs={'pk': self.pk, 'invite_token': self.invite_token}))

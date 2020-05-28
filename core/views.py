@@ -58,13 +58,21 @@ class RequestedItemsUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('core:requested-item-detail', args=[self.object.pk])
 
 
-class AddShopperView(LoginRequiredMixin, SingleObjectMixin, View):
+class AddShopperView(LoginRequiredMixin, View):
     model = Requester
-    slug_field = 'invite_token'
-    slug_url_kwarg = 'invite_token'
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, pk, invite_token, *args, **kwargs):
         shopper = get_object_or_404(Shopper, user=self.request.user)
-        requester = self.get_object()
+        requester = get_object_or_404(Requester, pk=pk, invite_token=invite_token)
         requester.add_shopper(shopper)
+        return redirect('account_login')
+
+
+class RemoveShopperView(LoginRequiredMixin, View):
+    model = Requester
+
+    def get(self, request, shopper_pk, *args, **kwargs):
+        requester = get_object_or_404(Requester, user=self.request.user)
+        shopper = get_object_or_404(Shopper, pk=shopper_pk)
+        requester.remove_shopper(shopper)
         return redirect('account_login')

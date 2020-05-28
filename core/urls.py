@@ -12,5 +12,5 @@ urlpatterns = [
     path('requested-item/<int:pk>/update/', views.RequestedItemsUpdateView.as_view(), name='requested-item-update'),
 
     path('add-shopper/<int:pk>/<str:invite_token>/', views.AddShopperView.as_view(), name='add-shopper'),
-
+    path('remove-shopper/<int:shopper_pk>/', views.RemoveShopperView.as_view(), name='remove-shopper'),
 ]

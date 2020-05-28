@@ -68,3 +68,23 @@ class AddShopperViewTests(ViewTestCase):
         requester.refresh_from_db()
         self.assertNotEqual(original_invite_token, requester.invite_token)
 
+
+class RemoveShopperViewTests(ViewTestCase):
+    def remove_shopper(self, requester, shopper):
+        return self.client.get(reverse('core:remove-shopper', args=[shopper.pk]))
+
+    def test_requester_can_remove_shopper(self):
+        shopper = test_utils.create_shopper()
+        requester = test_utils.create_requester(shoppers=[shopper])
+        self.assertIn(shopper, requester.shoppers.all())
+        self.login_user(requester.user)
+        self.remove_shopper(requester, shopper)
+        self.assertNotIn(shopper, requester.shoppers.all())
+
+    def test_shopper_cannot_remove_shopper(self):
+        shopper = test_utils.create_shopper()
+        requester = test_utils.create_requester(shoppers=[shopper])
+        self.assertIn(shopper, requester.shoppers.all())
+        self.login_user(shopper.user)
+        resp = self.remove_shopper(shopper, shopper)
+        self.assertResponseNotFound(resp)
