@@ -110,6 +110,9 @@ class CommentViewTests(ViewTestCase):
     def create_comment(self, requested_item, data):
         return self.post(reverse('core:comment-create', args=[requested_item.pk]), data=data)
 
+    def delete_comment(self, comment):
+        return self.post(reverse('core:comment-delete', args=[comment.pk]))
+
     def test_user_can_create_comment(self):
         comment_body = 'Bar'
         requested_item = test_utils.create_requested_item()
@@ -120,3 +123,12 @@ class CommentViewTests(ViewTestCase):
         self.assertEqual(requested_item.comments.count(), 1)
         comment = requested_item.comments.first()
         self.assertEqual(comment_body, comment.body)
+
+    def test_user_can_delete_comment(self):
+        shopper = test_utils.create_shopper()
+        requested_item = test_utils.create_requested_item(shopper=shopper)
+        comment = test_utils.create_comment(requested_item=requested_item)
+        self.assertEqual(requested_item.comments.count(), 1)
+        self.login_user(shopper.user)
+        self.delete_comment(comment)
+        self.assertEqual(requested_item.comments.count(), 0)

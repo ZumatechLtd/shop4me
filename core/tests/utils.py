@@ -4,7 +4,7 @@ from string import ascii_lowercase
 
 from django.contrib.auth.models import User
 
-from core.models import Account, Item, Requester, Shopper, RequestedItem
+from core.models import Account, Item, Requester, Shopper, RequestedItem, Comment
 
 
 def random_int(n=10):
@@ -70,11 +70,22 @@ def create_shopper(**kwargs):
     return get_or_create(Shopper, d)
 
 
-def create_requested_item(**kwargs):
+def create_requested_item(comments=[], **kwargs):
     d = kwargs.copy()
     set_if_not_present_or_falsish(d, 'requester', create_requester())
     set_if_not_present_or_falsish(d, 'item', create_item())
     set_if_not_present(d, 'quantity', random_int())
     set_if_not_present(d, 'priority', RequestedItem.LOW)
-    return get_or_create(RequestedItem, d)
+    requested_item = get_or_create(RequestedItem, d)
+    for comment in comments:
+        create_comment(**comment, requested_item=requested_item)
+    return requested_item
+
+
+def create_comment(**kwargs):
+    d = kwargs.copy()
+    set_if_not_present(d, 'author', create_user())
+    set_if_not_present(d, 'body', random_string())
+    set_if_not_present(d, 'requested_item', create_requested_item())
+    return get_or_create(Comment, d)
 
