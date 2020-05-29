@@ -102,3 +102,14 @@ class RequestedItem(models.Model):
     
     class Meta:
         ordering = ['-priority']
+
+
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    requested_item = models.ForeignKey(RequestedItem, on_delete=models.CASCADE, related_name='comments')
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created']
