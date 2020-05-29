@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% load static %}
+{% block title %}Request item{% endblock %}
+{% block content %}
+<div class="container-fluid tube-list-page">
+    <div class="row">
+        <div class="col-4 offset-3">
+            <h1>Create a comment</h1>
+            <form method="post">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                <button type="submit" value="Yes" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

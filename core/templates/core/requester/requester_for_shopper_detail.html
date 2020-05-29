@@ -27,7 +27,7 @@
         {% for requested_item in requester.requested_items.all %}
             <tr>
                 <td>
-                    {{ requested_item.item.name }}
+                    <a href="{% url 'core:requested-item-detail' requested_item.pk %}"> {{ requested_item.item.name }} </a>
                 </td>
                 <td>
                     {{ requested_item.quantity }}

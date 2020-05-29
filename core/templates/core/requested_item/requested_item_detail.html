@@ -5,4 +5,17 @@
 {% block title %}Requested item{% endblock %}
 {% block content %}
 <h1> {{ requested_item.item.name }} </h1>
+
+<div style="justify-content: space-around">
+    <a href="{% url 'core:comment-create' requested_item.pk %}">
+        <button class="btn btn-primary">
+            <span>Comment</span>
+        </button>
+    </a>
+</div>
+<ul>
+{% for comment in requested_item.comments.all %}
+    <li> {{ comment.body }}. {{ comment.created }} </li>
+{% endfor %}
+</ul>
 {% endblock %}

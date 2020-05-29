@@ -20,4 +20,6 @@ urlpatterns = [
 
     path('add-shopper/<int:pk>/<str:invite_token>/', views.AddShopperView.as_view(), name='add-shopper'),
     path('remove-shopper/<int:shopper_pk>/', views.RemoveShopperView.as_view(), name='remove-shopper'),
+
+    path('requested_item/<int:pk>/comment/new/', views.CommentCreateView.as_view(), name='comment-create'),
 ]

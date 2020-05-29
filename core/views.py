@@ -7,7 +7,7 @@ from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 
-from core.models import RequestedItem, Shopper, Requester
+from core.models import RequestedItem, Shopper, Requester, Comment
 
 
 class RequestedItemsListView(LoginRequiredMixin, ListView):
@@ -36,9 +36,6 @@ class RequestedItemsDetailView(LoginRequiredMixin, DetailView):
     model = RequestedItem
     template_name = 'core/requested_item/requested_item_detail.html'
     context_object_name = 'requested_item'
-
-    def get_queryset(self):
-        return RequestedItem.objects.for_user(self.request.user)
 
 
 class RequestedItemsDeleteView(LoginRequiredMixin, DeleteView):
@@ -130,3 +127,17 @@ class RequesterForShopperDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Shopper.objects.get(user=self.request.user).requesters.all()
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    template_name = 'core/comment/comment_create.html'
+    fields = ['body']
+
+    def get_success_url(self):
+        return reverse('core:requested-item-detail', args=[self.kwargs['pk']])
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.requested_item_id = self.kwargs['pk']
+        return super(CommentCreateView, self).form_valid(form)
