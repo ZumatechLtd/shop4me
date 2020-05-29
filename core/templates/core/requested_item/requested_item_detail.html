@@ -15,7 +15,16 @@
 </div>
 <ul>
 {% for comment in requested_item.comments.all %}
-    <li> {{ comment.body }}. {{ comment.created }} </li>
+    <li>
+        {{ comment.body }}. {{ comment.created }}
+        <div style="justify-content: space-around">
+            <a href="{% url 'core:comment-delete' comment.pk %}">
+                <button class="btn btn-primary">
+                    <span>Delete</span>
+                </button>
+            </a>
+        </div>
+    </li>
 {% endfor %}
 </ul>
 {% endblock %}

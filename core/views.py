@@ -141,3 +141,11 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         form.instance.requested_item_id = self.kwargs['pk']
         return super(CommentCreateView, self).form_valid(form)
+
+
+class CommentDeleteView(LoginRequiredMixin, DeleteView):
+    model = Comment
+    template_name = 'core/comment/comment_delete.html'
+
+    def get_success_url(self):
+        return reverse('core:requested-item-detail', args=[self.object.requested_item.pk])
