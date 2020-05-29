@@ -2,6 +2,7 @@
 {% load bootstrap4 %}
 {% bootstrap_css %}
 {% load static %}
+{% load time_tags %}
 {% block content %}
 <div style="justify-content: space-around">
     <a href="{% url 'core:requested-item-create' %}">
@@ -12,16 +13,43 @@
 </div>
 
 {% if object_list %}
-    <div>
-        <ul>
-            {% for requested_item in object_list %}
-            <li>
-                <a href="{% url 'core:requested-item-detail' requested_item.pk %}"> {{ requested_item.item.name }} - {{ requested_item.priority }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% else %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">
+                Item Name
+            </th>
+            <th scope="col">
+                Quantity
+            </th>
+            <th scope="col">
+                Priority
+            </th>
+            <th scope="col">
+                Claimed
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for requested_item in object_list %}
+        <tr>
+            <td>
+                <a href="{% url 'core:requested-item-detail' requested_item.pk %}"> {{ requested_item.item.name }} </a>
+            </td>
+            <td>
+                {{ requested_item.quantity }}
+            </td>
+            <td>
+                {{ requested_item.priority_string }}
+            </td>
+            <td>
+                {% if not requested_item.is_claimed %} Not claimed {% else %} Claimed {{ requested_item.claimed_epoch_timestamp|datetime_from_timestamp }} {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
     <p>No requested items are available.</p>
 {% endif %}
 {% endblock %}
