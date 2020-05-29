@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from core.models import RequestedItem
 from core.tests import utils as test_utils
 
 
@@ -22,6 +23,9 @@ class ViewTestCase(TestCase):
 
     def assertResponseNotFound(self, response):
         self.assertEqual(response.status_code, 404)
+
+    def assertResponseIsPermissionDenied(self, response):
+        self.assertEqual(response.status_code, 403)
 
     def assertResponseStatusCode(self, response, expected_status_code, msg=None):
         self.assertEqual(response.status_code, expected_status_code, msg)
@@ -56,7 +60,8 @@ class AddShopperViewTests(ViewTestCase):
         requester_two = test_utils.create_requester()
         self.login_user(requester_two.user)
         response = self.get(requester_one.invite_link)
-        self.assertResponseNotFound(response)
+        print(response.content)
+        self.assertResponseIsPermissionDenied(response)
 
     def test_invite_link_is_updated_once_invite_is_accepted(self):
         requester = test_utils.create_requester()
@@ -70,15 +75,15 @@ class AddShopperViewTests(ViewTestCase):
 
 
 class RemoveShopperViewTests(ViewTestCase):
-    def remove_shopper(self, requester, shopper):
-        return self.client.get(reverse('core:remove-shopper', args=[shopper.pk]))
+    def remove_shopper(self, shopper):
+        return self.get(reverse('core:remove-shopper', args=[shopper.pk]))
 
     def test_requester_can_remove_shopper(self):
         shopper = test_utils.create_shopper()
         requester = test_utils.create_requester(shoppers=[shopper])
         self.assertIn(shopper, requester.shoppers.all())
         self.login_user(requester.user)
-        self.remove_shopper(requester, shopper)
+        self.remove_shopper(shopper)
         self.assertNotIn(shopper, requester.shoppers.all())
 
     def test_shopper_cannot_remove_shopper(self):
@@ -86,24 +91,92 @@ class RemoveShopperViewTests(ViewTestCase):
         requester = test_utils.create_requester(shoppers=[shopper])
         self.assertIn(shopper, requester.shoppers.all())
         self.login_user(shopper.user)
-        resp = self.remove_shopper(shopper, shopper)
-        self.assertResponseNotFound(resp)
+        resp = self.remove_shopper(shopper)
+        self.assertResponseIsPermissionDenied(resp)
 
 
-class RequestedItemsClaimViewTest(ViewTestCase):
+class RequestedItemsViewTests(ViewTestCase):
     def setUp(self):
-        super(RequestedItemsClaimViewTest, self).setUp()
-        self.shopper = test_utils.create_shopper()
+        super(RequestedItemsViewTests, self).setUp()
+
+    def visit_requested_items(self):
+        return self.get(reverse('core:requested-item-create'))
+
+    def delete_requested_item(self, requested_item):
+        return self.post(reverse('core:requested-item-delete', args=[requested_item.pk]))
 
     def claim_item(self, requested_item):
         return self.get(reverse('core:requested-item-claim', args=[requested_item.pk]))
 
-    def test_shopper_can_claim_requested_item(self):
+    def view_requested_items(self):
+        return self.get(reverse('core:requested-items'))
+
+    def test_shopper_cannot_access_requesters_requested_items_list(self):
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        resp = self.view_requested_items()
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_requesters_can_access_requested_items_list(self):
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.view_requested_items()
+        self.assertResponseOK(resp)
+
+    def test_requesters_can_create_requested_items(self):
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.visit_requested_items()
+        self.assertResponseOK(resp)
+
+    def test_shoppers_cannot_create_requested_items(self):
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        resp = self.visit_requested_items()
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_owner_of_requested_item_can_delete(self):
         requested_item = test_utils.create_requested_item()
-        self.login_user(self.shopper.user)
+        requested_item_pk = requested_item.pk
+        self.login_user(requested_item.requester.user)
+        self.delete_requested_item(requested_item)
+        self.assertFalse(RequestedItem.objects.filter(pk=requested_item_pk).exists())
+
+    def test_other_requester_cannot_delete_requested_item(self):
+        requested_item = test_utils.create_requested_item()
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.delete_requested_item(requested_item)
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_shopper_cannot_delete_requested_items(self):
+        shopper = test_utils.create_shopper()
+        requested_item = test_utils.create_requested_item()
+        self.login_user(shopper.user)
+        resp = self.delete_requested_item(requested_item)
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_shopper_can_claim_requested_item(self):
+        shopper = test_utils.create_shopper()
+        requested_item = test_utils.create_requested_item(shopper=shopper)
+        self.login_user(shopper.user)
         self.claim_item(requested_item)
         requested_item.refresh_from_db()
-        self.assertEqual(requested_item.shopper, self.shopper)
+        self.assertEqual(requested_item.shopper, shopper)
+
+    def test_requester_cannot_claim_requested_item(self):
+        requested_item = test_utils.create_requested_item()
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.claim_item(requested_item)
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_unauthorized_shopper_cannot_claim_requested_item(self):
+        requested_item = test_utils.create_requested_item()
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        resp = self.claim_item(requested_item)
+        self.assertResponseIsPermissionDenied(resp)
 
 
 class CommentViewTests(ViewTestCase):
@@ -115,8 +188,8 @@ class CommentViewTests(ViewTestCase):
 
     def test_user_can_create_comment(self):
         comment_body = 'Bar'
-        requested_item = test_utils.create_requested_item()
         shopper = test_utils.create_shopper()
+        requested_item = test_utils.create_requested_item(shopper=shopper)
         self.login_user(shopper.user)
         self.create_comment(requested_item, {'body': comment_body})
         requested_item.refresh_from_db()
@@ -132,3 +205,69 @@ class CommentViewTests(ViewTestCase):
         self.login_user(shopper.user)
         self.delete_comment(comment)
         self.assertEqual(requested_item.comments.count(), 0)
+
+    def test_unauthorized_user_cannot_create_comment(self):
+        requested_item = test_utils.create_requested_item(shopper=test_utils.create_shopper())
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.create_comment(requested_item, {'body': 'Foo'})
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_unauthorized_user_cannot_delete_comment(self):
+        requested_item = test_utils.create_requested_item(shopper=test_utils.create_shopper())
+        comment = test_utils.create_comment(requested_item=requested_item)
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.delete_comment(comment)
+
+        self.assertResponseIsPermissionDenied(resp)
+
+
+class ShopperViewTests(ViewTestCase):
+    def view_shopper_detail(self, shopper):
+        return self.get(reverse('core:shopper-detail', args=[shopper.pk]))
+
+    def test_shoppers_cannot_can_view_shopper_list(self):
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        resp = self.client.get(reverse('core:shoppers'))
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_requester_cannot_view_unauthorized_shopper(self):
+        requester = test_utils.create_requester()
+        shopper = test_utils.create_shopper()
+        self.login_user(requester.user)
+        resp = self.view_shopper_detail(shopper)
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_shopper_cannot_view_shopper_detail(self):
+        shopper_one = test_utils.create_shopper()
+        shopper_two = test_utils.create_shopper()
+        self.login_user(shopper_one.user)
+        resp = self.view_shopper_detail(shopper_two)
+        self.assertResponseIsPermissionDenied(resp)
+
+
+class RequestersForShopperViewTests(ViewTestCase):
+    def view_requester_detail(self, requester):
+        return self.get(reverse('core:requester-detail', args=[requester.pk]))
+
+    def test_requester_cannot_view_requesters_for_shopper(self):
+        requester = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.get(reverse('core:requesters'))
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_requester_cannot_view_requester_detail(self):
+        requester = test_utils.create_requester()
+        requester_two = test_utils.create_requester()
+        self.login_user(requester.user)
+        resp = self.view_requester_detail(requester_two)
+        self.assertResponseIsPermissionDenied(resp)
+
+    def test_shopper_cannot_view_detail_of_unauthorized_requester(self):
+        shopper = test_utils.create_shopper()
+        requester = test_utils.create_requester()
+        self.login_user(shopper.user)
+        resp = self.view_requester_detail(requester)
+        self.assertResponseIsPermissionDenied(resp)

@@ -19,7 +19,7 @@ urlpatterns = [
     path('requester/<int:pk>/', views.RequesterForShopperDetailView.as_view(), name='requester-detail'),
 
     path('add-shopper/<int:pk>/<str:invite_token>/', views.AddShopperView.as_view(), name='add-shopper'),
-    path('remove-shopper/<int:shopper_pk>/', views.RemoveShopperView.as_view(), name='remove-shopper'),
+    path('remove-shopper/<int:pk>/', views.RemoveShopperView.as_view(), name='remove-shopper'),
 
     path('requested_item/<int:pk>/comment/new/', views.CommentCreateView.as_view(), name='comment-create'),
     path('requested_item/comment/<int:pk>/delete/', views.CommentDeleteView.as_view(), name='comment-delete'),

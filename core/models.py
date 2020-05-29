@@ -27,6 +27,14 @@ class Profile(models.Model):
             cls.SHOPPER: Shopper,
         }[account_type]
 
+    @classmethod
+    def user_is_requester(cls, user):
+        return hasattr(user, cls.REQUESTER)
+
+    @classmethod
+    def user_is_shopper(cls, user):
+        return hasattr(user, cls.SHOPPER)
+
     class Meta:
         abstract = True
 

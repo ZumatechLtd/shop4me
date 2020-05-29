@@ -1,27 +1,65 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-# Create your views here.
-from django.http import HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 
-from core.models import RequestedItem, Shopper, Requester, Comment
+from core.models import RequestedItem, Shopper, Requester, Comment, Profile
 
 
-class RequestedItemsListView(LoginRequiredMixin, ListView):
+class UserTestMixin(LoginRequiredMixin, UserPassesTestMixin):
+    tests = []
+
+    def test_func(self):
+        return all([f(self) for f in self.tests])
+
+
+def user_is_requester(view_cls):
+    return Profile.user_is_requester(view_cls.request.user)
+
+
+def user_is_shopper(view_cls):
+    return Profile.user_is_shopper(view_cls.request.user)
+
+
+def requester_owns_requested_item(view_cls):
+    return user_is_requester(view_cls) and RequestedItem.objects.filter(pk=view_cls.kwargs[view_cls.pk_url_kwarg], requester=view_cls.request.user.requester).exists()
+
+
+def user_is_authorized_shopper(view_cls):
+    requested_item = RequestedItem.objects.get(pk=view_cls.kwargs[view_cls.pk_url_kwarg])
+    requester = requested_item.requester
+    return user_is_shopper(view_cls) and view_cls.request.user.shopper in requester.shoppers.all()
+
+
+def shopper_is_authorized_for_requester(view_cls):
+    return user_is_requester(view_cls) and view_cls.kwargs['pk'] in view_cls.request.user.requester.shoppers.all().values_list('id', flat=True)
+
+
+def requester_is_authorized_for_shopper(view_cls):
+    return user_is_shopper(view_cls) and view_cls.kwargs['pk'] in view_cls.request.user.shopper.requesters.all().values_list('id', flat=True)
+
+
+def user_is_authorized_on_requested_item(view_cls):
+    requested_item = RequestedItem.objects.get(pk=view_cls.kwargs['pk'])
+    return view_cls.request.user in [requested_item.shopper.user, requested_item.requester.user]
+
+
+class RequestedItemsListView(UserTestMixin, ListView):
     model = RequestedItem
     template_name = 'core/requested_item/requested_item_list.html'
+    tests = [user_is_requester]
 
     def get_queryset(self):
         return RequestedItem.objects.for_user(self.request.user)
 
 
-class RequestedItemsCreateView(LoginRequiredMixin, CreateView):
+class RequestedItemsCreateView(UserTestMixin, CreateView):
     model = RequestedItem
     template_name = 'core/requested_item/requested_item_create.html'
     fields = ['item', 'quantity', 'priority']
+    tests = [user_is_requester]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.object.id])
@@ -38,25 +76,28 @@ class RequestedItemsDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'requested_item'
 
 
-class RequestedItemsDeleteView(LoginRequiredMixin, DeleteView):
+class RequestedItemsDeleteView(UserTestMixin, DeleteView):
     model = RequestedItem
     template_name = 'core/requested_item/requested_item_delete.html'
+    tests = [requester_owns_requested_item]
 
     def get_success_url(self):
         return reverse('core:requested-items')
 
 
-class RequestedItemsUpdateView(LoginRequiredMixin, UpdateView):
+class RequestedItemsUpdateView(UserTestMixin, UpdateView):
     model = RequestedItem
     template_name = 'core/requested_item/requested_item_update.html'
     fields = ['quantity', 'priority', 'shopper']
+    tests = [requester_owns_requested_item]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.object.pk])
 
 
-class RequestedItemsClaimView(LoginRequiredMixin, SingleObjectMixin, View):
+class RequestedItemsClaimView(UserTestMixin, SingleObjectMixin, View):
     model = RequestedItem
+    tests = [user_is_shopper, user_is_authorized_shopper]
 
     def get(self, request, pk, *args, **kwargs):
         shopper = get_object_or_404(Shopper, user=self.request.user)
@@ -65,8 +106,9 @@ class RequestedItemsClaimView(LoginRequiredMixin, SingleObjectMixin, View):
         return redirect('core:requester-detail', pk=requested_item.requester.pk)
 
 
-class AddShopperView(LoginRequiredMixin, View):
+class AddShopperView(UserTestMixin, View):
     model = Requester
+    tests = [user_is_shopper]
 
     def get(self, request, pk, invite_token, *args, **kwargs):
         shopper = get_object_or_404(Shopper, user=self.request.user)
@@ -75,19 +117,21 @@ class AddShopperView(LoginRequiredMixin, View):
         return redirect('account_login')
 
 
-class RemoveShopperView(LoginRequiredMixin, View):
+class RemoveShopperView(UserTestMixin, View):
     model = Requester
+    tests = [shopper_is_authorized_for_requester]
 
-    def get(self, request, shopper_pk, *args, **kwargs):
+    def get(self, request, pk, *args, **kwargs):
         requester = get_object_or_404(Requester, user=self.request.user)
-        shopper = get_object_or_404(Shopper, pk=shopper_pk)
+        shopper = get_object_or_404(Shopper, pk=pk)
         requester.remove_shopper(shopper)
         return redirect('core:shoppers')
 
 
-class ShoppersListView(LoginRequiredMixin, ListView):
+class ShoppersListView(UserTestMixin, ListView):
     model = Shopper
     template_name = 'core/shopper/shoppers_list.html'
+    tests = [user_is_requester]
 
     def get_queryset(self):
         return Requester.objects.get(user=self.request.user).shoppers.all()
@@ -98,18 +142,20 @@ class ShoppersListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ShoppersDetailView(LoginRequiredMixin, DetailView):
+class ShoppersDetailView(UserTestMixin, DetailView):
     model = Shopper
     template_name = 'core/shopper/shopper_detail.html'
     context_object_name = 'shopper'
+    tests = [shopper_is_authorized_for_requester]
 
     def get_queryset(self):
         return Requester.objects.get(user=self.request.user).shoppers.all()
 
 
-class RequesterForShopperListView(LoginRequiredMixin, ListView):
+class RequesterForShopperListView(UserTestMixin, ListView):
     model = Requester
     template_name = 'core/requester/requesters_for_shopper_list.html'
+    tests = [user_is_shopper]
 
     def get_queryset(self):
         return Shopper.objects.get(user=self.request.user).requesters.all()
@@ -120,19 +166,21 @@ class RequesterForShopperListView(LoginRequiredMixin, ListView):
         return context
 
 
-class RequesterForShopperDetailView(LoginRequiredMixin, DetailView):
+class RequesterForShopperDetailView(UserTestMixin, DetailView):
     model = Requester
     template_name = 'core/requester/requester_for_shopper_detail.html'
     context_object_name = 'requester'
+    tests = [requester_is_authorized_for_shopper]
 
     def get_queryset(self):
         return Shopper.objects.get(user=self.request.user).requesters.all()
 
 
-class CommentCreateView(LoginRequiredMixin, CreateView):
+class CommentCreateView(UserTestMixin, CreateView):
     model = Comment
     template_name = 'core/comment/comment_create.html'
     fields = ['body']
+    tests = [user_is_authorized_on_requested_item]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.kwargs['pk']])
@@ -143,9 +191,10 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return super(CommentCreateView, self).form_valid(form)
 
 
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
+class CommentDeleteView(UserTestMixin, DeleteView):
     model = Comment
     template_name = 'core/comment/comment_delete.html'
+    tests = [user_is_authorized_on_requested_item]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.object.requested_item.pk])

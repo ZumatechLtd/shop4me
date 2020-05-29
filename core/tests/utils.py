@@ -64,6 +64,7 @@ def create_requester(shoppers=[], **kwargs):
     requester.save()
     return requester
 
+
 def create_shopper(**kwargs):
     d = kwargs.copy()
     d = setup_profile_fields(**d)
