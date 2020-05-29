@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load time_tags %}
 {% load bootstrap4 %}
 {% bootstrap_css %}
 {% load static %}
@@ -35,7 +36,7 @@
                     {{ requested_item.priority_string }}
                 </td>
                 <td>
-                    {% if not requested_item.is_claimed %} <a href="{% url 'core:requested-item-claim' requested_item.pk %}">Claim</a>{% endif %}
+                    {% if not requested_item.is_claimed %} <a href="{% url 'core:requested-item-claim' requested_item.pk %}">Claim</a>{% else %} Claimed {{ requested_item.claimed_epoch_timestamp|datetime_from_timestamp }} {% endif %}
                 </td>
             </tr>
         {% endfor %}
