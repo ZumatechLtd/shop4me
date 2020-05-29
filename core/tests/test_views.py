@@ -104,3 +104,19 @@ class RequestedItemsClaimViewTest(ViewTestCase):
         self.claim_item(requested_item)
         requested_item.refresh_from_db()
         self.assertEqual(requested_item.shopper, self.shopper)
+
+
+class CommentViewTests(ViewTestCase):
+    def create_comment(self, requested_item, data):
+        return self.post(reverse('core:comment-create', args=[requested_item.pk]), data=data)
+
+    def test_user_can_create_comment(self):
+        comment_body = 'Bar'
+        requested_item = test_utils.create_requested_item()
+        shopper = test_utils.create_shopper()
+        self.login_user(shopper.user)
+        self.create_comment(requested_item, {'body': comment_body})
+        requested_item.refresh_from_db()
+        self.assertEqual(requested_item.comments.count(), 1)
+        comment = requested_item.comments.first()
+        self.assertEqual(comment_body, comment.body)
