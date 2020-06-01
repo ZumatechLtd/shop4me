@@ -200,10 +200,10 @@ class CommentViewTests(ViewTestCase):
     def test_user_can_delete_comment(self):
         shopper = test_utils.create_shopper()
         requested_item = test_utils.create_requested_item(shopper=shopper)
-        comment = test_utils.create_comment(requested_item=requested_item)
+        comment = test_utils.create_comment(author=shopper.user, requested_item=requested_item)
         self.assertEqual(requested_item.comments.count(), 1)
         self.login_user(shopper.user)
-        self.delete_comment(comment)
+        resp = self.delete_comment(comment)
         self.assertEqual(requested_item.comments.count(), 0)
 
     def test_unauthorized_user_cannot_create_comment(self):

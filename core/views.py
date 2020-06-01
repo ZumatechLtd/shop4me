@@ -191,7 +191,7 @@ class CommentCreateView(UserTestMixin, CreateView):
     model = Comment
     template_name = 'core/comment/comment_create.html'
     fields = ['body']
-    tests = [comment_belongs_to_user]
+    tests = [user_is_authorized_on_requested_item]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.kwargs['pk']])
