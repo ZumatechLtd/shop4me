@@ -207,7 +207,7 @@ class CommentViewTests(ViewTestCase):
         self.assertEqual(requested_item.comments.count(), 0)
 
     def test_unauthorized_user_cannot_create_comment(self):
-        requested_item = test_utils.create_requested_item(shopper=test_utils.create_shopper())
+        requested_item = test_utils.create_requested_item()
         requester = test_utils.create_requester()
         self.login_user(requester.user)
         resp = self.create_comment(requested_item, {'body': 'Foo'})

@@ -43,7 +43,10 @@ def requester_is_authorized_for_shopper(view_cls):
 
 def user_is_authorized_on_requested_item(view_cls):
     requested_item = RequestedItem.objects.get(pk=view_cls.kwargs['pk'])
-    return view_cls.request.user in [requested_item.shopper.user, requested_item.requester.user]
+    authorized_users = [requested_item.requester.user]
+    if requested_item.shopper is not None:
+        authorized_users.append(requested_item.shopper.user)
+    return view_cls.request.user in authorized_users
 
 
 class RequestedItemsListView(UserTestMixin, ListView):
