@@ -4,3 +4,5 @@ PyYAML==5.3.1
 awsebcli==3.18.1
 django-allauth==0.42.0
 django-debug-toolbar==2.2
+flake8==3.8.2
+pyflakes==2.2.0
