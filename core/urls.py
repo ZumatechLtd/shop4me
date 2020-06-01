@@ -5,6 +5,7 @@ from core import views
 app_name = 'core'
 
 urlpatterns = [
+    path('', views.IndexView.as_view(), name='index'),
     path('requested-items/', views.RequestedItemsListView.as_view(), name='requested-items'),
     path('requested-item/new/', views.RequestedItemsCreateView.as_view(), name='requested-item-create'),
     path('requested-item/<int:pk>/', views.RequestedItemsDetailView.as_view(), name='requested-item-detail'),

@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
+from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView, TemplateView
 from django.views.generic.detail import SingleObjectMixin
 
 from core.models import RequestedItem, Shopper, Requester, Comment, Profile
@@ -42,8 +42,6 @@ def requester_is_authorized_for_shopper(view_cls):
 
 
 def user_is_authorized_on_requested_item(view_cls):
-    print("Requested item", view_cls.kwargs['pk'])
-    print(RequestedItem.objects.all())
     requested_item = RequestedItem.objects.get(pk=view_cls.kwargs['pk'])
     authorized_users = [requested_item.requester.user]
     if requested_item.shopper is not None:
@@ -53,6 +51,10 @@ def user_is_authorized_on_requested_item(view_cls):
 
 def comment_belongs_to_user(view_cls):
     return view_cls.request.user == view_cls.model.objects.get(pk=view_cls.kwargs[view_cls.pk_url_kwarg]).author
+
+
+class IndexView(TemplateView):
+    template_name = 'core/index.html'
 
 
 class RequestedItemsListView(UserTestMixin, ListView):
