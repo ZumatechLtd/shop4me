@@ -42,11 +42,17 @@ def requester_is_authorized_for_shopper(view_cls):
 
 
 def user_is_authorized_on_requested_item(view_cls):
+    print("Requested item", view_cls.kwargs['pk'])
+    print(RequestedItem.objects.all())
     requested_item = RequestedItem.objects.get(pk=view_cls.kwargs['pk'])
     authorized_users = [requested_item.requester.user]
     if requested_item.shopper is not None:
         authorized_users.append(requested_item.shopper.user)
     return view_cls.request.user in authorized_users
+
+
+def comment_belongs_to_user(view_cls):
+    return view_cls.request.user == view_cls.model.objects.get(pk=view_cls.kwargs[view_cls.pk_url_kwarg]).author
 
 
 class RequestedItemsListView(UserTestMixin, ListView):
@@ -183,7 +189,7 @@ class CommentCreateView(UserTestMixin, CreateView):
     model = Comment
     template_name = 'core/comment/comment_create.html'
     fields = ['body']
-    tests = [user_is_authorized_on_requested_item]
+    tests = [comment_belongs_to_user]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.kwargs['pk']])
@@ -197,7 +203,7 @@ class CommentCreateView(UserTestMixin, CreateView):
 class CommentDeleteView(UserTestMixin, DeleteView):
     model = Comment
     template_name = 'core/comment/comment_delete.html'
-    tests = [user_is_authorized_on_requested_item]
+    tests = [comment_belongs_to_user]
 
     def get_success_url(self):
         return reverse('core:requested-item-detail', args=[self.object.requested_item.pk])
