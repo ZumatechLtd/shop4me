@@ -1,4 +1,4 @@
-Django==3.0.6
+Django==3.0.7
 django-bootstrap4==1.1.1
 PyYAML==5.3.1
 awsebcli==3.18.1
